@@ -41,7 +41,8 @@ body {
         }
         .canvas-container {
             flex: 1;
-            height: 100%;
+            height: calc(100vh - 40px);
+            overflow: hidden;
         }
     }
 }
