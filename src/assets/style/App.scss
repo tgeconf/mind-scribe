@@ -17,6 +17,11 @@ html,
 body {
     @extend .full-window-size;
     @extend .zero-margin-padding;
+    overflow: hidden;
+}
+
+div{
+    overflow: hidden;
 }
 
 .wrapper {

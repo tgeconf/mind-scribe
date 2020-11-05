@@ -5,7 +5,8 @@ import { ICoord } from '../ds';
 interface BlockSelectorProps {
     posi: ICoord
     val: string
-    showSelector: (res: boolean) => void
+    showBSelector: (res: boolean) => void
+    addBlock: (posi: ICoord, type: string) => void
 }
 
 interface IBlockSelectorState {
@@ -27,7 +28,11 @@ export default class BlockSelector extends React.Component<BlockSelectorProps, I
     }
 
     updateCanvasShowBSelector(show: boolean) {
-        this.props.showSelector(show);
+        this.props.showBSelector(show);
+    }
+
+    addCanvasBlock(posi: ICoord, type: string) {
+        this.props.addBlock(posi, type);
     }
 
     render() {
@@ -47,6 +52,7 @@ export default class BlockSelector extends React.Component<BlockSelectorProps, I
                     value={this.state.val}
                     autoFocus={true}
                     onBlur={(e) => { this.updateCanvasShowBSelector(false) }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { this.addCanvasBlock(this.props.posi, this.state.val) } }}
                 ></input>
             </div>
         )

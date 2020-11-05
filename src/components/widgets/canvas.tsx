@@ -2,10 +2,12 @@ import '../../assets/style/canvas.scss';
 import React from 'react';
 import BlockSelector from './blockSelector';
 import { ICoord } from '../ds';
+import Block, { IBlockProps } from './block';
 
 interface ICanvasState {
     showBlockSelector: boolean
     blockSelectorPosi: ICoord
+    blocks: IBlockProps[]
 }
 
 export default class Canvas extends React.Component<{}, ICanvasState> {
@@ -15,12 +17,24 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
 
     state = {
         showBlockSelector: false,
-        blockSelectorPosi: { x: 0, y: 0 }
+        blockSelectorPosi: { x: 0, y: 0 },
+        blocks: []
     }
 
-    getSelectorRes(res: boolean) {
+    showBSelector(show: boolean) {
         this.setState({
-            showBlockSelector: res
+            showBlockSelector: show
+        })
+    }
+
+    getSelectorRes(posi: ICoord, type: string) {
+        this.setState({
+            showBlockSelector: false,
+            blocks: [...this.state.blocks, {
+                posi: posi,
+                blockType: type,
+                blockContent: ''
+            }]
         })
     }
 
@@ -43,12 +57,21 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
         }
 
         const bSelector: JSX.Element | null = this.state.showBlockSelector ?
-            <BlockSelector posi={this.state.blockSelectorPosi} val={''} showSelector={this.getSelectorRes.bind(this)}></BlockSelector> :
-            null
+            <BlockSelector
+                posi={this.state.blockSelectorPosi}
+                val={''}
+                showBSelector={this.showBSelector.bind(this)}
+                addBlock={this.getSelectorRes.bind(this)}
+            ></BlockSelector> : null
+
+        const renderedBlocks: JSX.Element[] = this.state.blocks.map((bProps: IBlockProps, idx: number) => {
+            return <Block posi={bProps.posi} blockType={bProps.blockType} blockContent={bProps.blockContent}></Block>
+        })
         return (
             <div>
                 <svg id='canvasSvg' className='canvas-svg' onDoubleClick={(e) => { handleDblClick(e) }}></svg>
                 {bSelector}
+                {renderedBlocks}
             </div>
         )
     }
