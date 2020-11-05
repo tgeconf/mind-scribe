@@ -11,6 +11,8 @@ interface ICanvasState {
 }
 
 export default class Canvas extends React.Component<{}, ICanvasState> {
+    static CANVAS_BG_ID: string = 'canvasBg';
+
     constructor(props: any) {
         super(props);
     }
@@ -46,11 +48,15 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
                 })
                 resolve();
             }).then(() => {
+                const canvasBg: HTMLElement | null = document.getElementById(Canvas.CANVAS_BG_ID);
+                const offsetX: number = canvasBg ? canvasBg.offsetLeft : 0;
+                const offsetY: number = canvasBg ? canvasBg.offsetTop : 0;
+                console.log('test: ', offsetX, offsetY, canvasBg?.offsetTop);
                 this.setState({
                     showBlockSelector: true,
                     blockSelectorPosi: {
-                        x: e.clientX - BlockSelector.selectorW / 2,
-                        y: e.clientY - BlockSelector.selectorH / 2
+                        x: e.clientX - BlockSelector.selectorW / 2 - offsetX,
+                        y: e.clientY - BlockSelector.selectorH / 2 - offsetY
                     }
                 })
             })
@@ -68,8 +74,7 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
             return <Block posi={bProps.posi} blockType={bProps.blockType} blockContent={bProps.blockContent}></Block>
         })
         return (
-            <div>
-                <svg id='canvasSvg' className='canvas-svg' onDoubleClick={(e) => { handleDblClick(e) }}></svg>
+            <div id={Canvas.CANVAS_BG_ID} className='canvas-bg' onDoubleClick={(e) => { handleDblClick(e) }}>
                 {bSelector}
                 {renderedBlocks}
             </div>

@@ -1,6 +1,7 @@
 import '../../assets/style/block.scss';
 import React from 'react';
 import { ICoord, ISize } from '../ds';
+import { start } from 'repl';
 
 export interface IBlockProps {
     posi: ICoord
@@ -13,6 +14,8 @@ interface BlockState {
     blockSize: ISize | undefined
     blockType: string
     blockContent: string
+    mouseMoving: boolean
+    mouseMovingPosi: ICoord
 }
 
 export default class Block extends React.Component<IBlockProps, BlockState> {
@@ -29,7 +32,9 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
                 blockPosi: props.posi,
                 blockSize: typeof Block.BLOCK_SIZES.get(props.blockType) !== 'undefined' ? Block.BLOCK_SIZES.get(props.blockType) : { w: 0, h: 0 },
                 blockType: props.blockType,
-                blockContent: ''
+                blockContent: '',
+                mouseMoving: false,
+                mouseMovingPosi: { x: 0, y: 0 }
             }
         }
     }
@@ -41,6 +46,41 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
     // }
 
     render() {
+        const handleMouseDown = (e: any) => {
+            e.target.classList.add('grabbing');
+            this.setState({
+                mouseMoving: true,
+                mouseMovingPosi: { x: e.clientX, y: e.clientY }
+            })
+        }
+
+        const handleMouseMove = (e: any) => {
+            console.log('moving', this.state.mouseMoving);
+            if (this.state.mouseMoving) {
+                const tmpX: number = e.clientX;
+                const tmpY: number = e.clientY;
+                const diffX: number = tmpX - this.state.mouseMovingPosi.x;
+                const diffY: number = tmpY - this.state.mouseMovingPosi.y;
+                this.setState({
+                    blockPosi: {
+                        x: this.state.blockPosi.x + diffX,
+                        y: this.state.blockPosi.y + diffY
+                    },
+                    mouseMovingPosi: {
+                        x: tmpX,
+                        y: tmpY
+                    }
+                })
+            }
+        }
+
+        const handleMouseUp = (e: any) => {
+            e.target.classList.remove('grabbing');
+            this.setState({
+                mouseMoving: false
+            })
+        }
+
         return (
             <div className='block-container' style={{
                 top: this.state.blockPosi.y,
@@ -49,6 +89,10 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
                 height: typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.h : 0
             }}>
                 {this.state.blockType}
+                <div className='cover'
+                    onMouseDown={(e) => { handleMouseDown(e) }}
+                    onMouseMove={(e) => { handleMouseMove(e) }}
+                    onMouseUp={(e) => { handleMouseUp(e) }}></div>
             </div>
         )
     }
