@@ -1,7 +1,7 @@
 import '../../assets/style/block.scss';
 import React from 'react';
+import MonacoEditor from 'react-monaco-editor';
 import { ICoord, ISize } from '../ds';
-import { start } from 'repl';
 
 export interface IBlockProps {
     posi: ICoord
@@ -44,41 +44,76 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
     //     blockSize: { w: 0, h: 0 },
     //     blockType: ''
     // }
+    handleMouseDown(e: any) {
+        e.target.classList.add('grabbing');
+        this.setState({
+            mouseMoving: true,
+            mouseMovingPosi: { x: e.clientX, y: e.clientY }
+        })
+    }
+
+    handleMouseMove(e: any) {
+        console.log('moving', this.state.mouseMoving);
+        if (this.state.mouseMoving) {
+            const tmpX: number = e.clientX;
+            const tmpY: number = e.clientY;
+            const diffX: number = tmpX - this.state.mouseMovingPosi.x;
+            const diffY: number = tmpY - this.state.mouseMovingPosi.y;
+            this.setState({
+                blockPosi: {
+                    x: this.state.blockPosi.x + diffX,
+                    y: this.state.blockPosi.y + diffY
+                },
+                mouseMovingPosi: {
+                    x: tmpX,
+                    y: tmpY
+                }
+            })
+        }
+    }
+
+    handleMouseUp(e: any) {
+        e.target.classList.remove('grabbing');
+        this.setState({
+            mouseMoving: false
+        })
+    }
+
+    handleMonacoOnChange(newVal: string, e: any) {
+        console.log('onChange', newVal, e);
+    }
+
+    handleMonacoDidMount(editor: any, monaco: any) {
+        console.log('editorDidMount', editor);
+        editor.focus();
+    }
 
     render() {
-        const handleMouseDown = (e: any) => {
-            e.target.classList.add('grabbing');
-            this.setState({
-                mouseMoving: true,
-                mouseMovingPosi: { x: e.clientX, y: e.clientY }
-            })
-        }
+        //generate block content
+        let blockInnerContainer: JSX.Element = <div className='block-inner-container'></div>;
+        switch (this.state.blockType) {
+            case Block.BLOCK_TYPES[0]:
+                const options = {
+                    selectOnLineNumbers: true
+                };
+                blockInnerContainer = <div className='block-inner-container'>
+                    <MonacoEditor
+                        width={typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.w : 0}
+                        height={typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.h : 0}
+                        language="json"
+                        theme="vs-dark"
+                        value={this.state.blockContent}
+                        options={options}
+                        onChange={this.handleMonacoOnChange}
+                        
+                        editorDidMount={this.handleMonacoDidMount}
+                    />
+                </div>
+                break;
 
-        const handleMouseMove = (e: any) => {
-            console.log('moving', this.state.mouseMoving);
-            if (this.state.mouseMoving) {
-                const tmpX: number = e.clientX;
-                const tmpY: number = e.clientY;
-                const diffX: number = tmpX - this.state.mouseMovingPosi.x;
-                const diffY: number = tmpY - this.state.mouseMovingPosi.y;
-                this.setState({
-                    blockPosi: {
-                        x: this.state.blockPosi.x + diffX,
-                        y: this.state.blockPosi.y + diffY
-                    },
-                    mouseMovingPosi: {
-                        x: tmpX,
-                        y: tmpY
-                    }
-                })
-            }
-        }
-
-        const handleMouseUp = (e: any) => {
-            e.target.classList.remove('grabbing');
-            this.setState({
-                mouseMoving: false
-            })
+            default:
+                <div className='block-inner-container'>{this.state.blockContent}</div>
+                break;
         }
 
         return (
@@ -88,11 +123,11 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
                 width: typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.w : 0,
                 height: typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.h : 0
             }}>
-                {this.state.blockType}
-                <div className='cover'
-                    onMouseDown={(e) => { handleMouseDown(e) }}
-                    onMouseMove={(e) => { handleMouseMove(e) }}
-                    onMouseUp={(e) => { handleMouseUp(e) }}></div>
+                {blockInnerContainer}
+                {/* <div className='cover'
+                    onMouseDown={(e) => { this.handleMouseDown(e) }}
+                    onMouseMove={(e) => { this.handleMouseMove(e) }}
+                    onMouseUp={(e) => { this.handleMouseUp(e) }}></div> */}
             </div>
         )
     }
