@@ -1,6 +1,10 @@
-.canvas-bg{
+.canvas-bg {
     position: relative;
     width: 3000px;
     height: 3000px;
-    overflow: auto;
+    overflow: hidden;
+    svg {
+        width: 3000px;
+        height: 3000px;
+    }
 }

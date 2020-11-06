@@ -4,13 +4,15 @@ import MonacoEditor from 'react-monaco-editor';
 import { ICoord, ISize } from '../ds';
 
 export interface IBlockProps {
+    id: number
     posi: ICoord
     blockType: string
     blockContent: string
+    deleteBlock: (blockId: number) => void
 }
 
 interface BlockState {
-    blockPosi: ICoord
+    diffPosi: ICoord
     blockSize: ISize | undefined
     blockType: string
     blockContent: string
@@ -29,10 +31,11 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
 
     constructor(props: any) {
         super(props);
+        console.log('constructuing', this.props.posi);
         this.monacoRef = React.createRef();
         if (Block.BLOCK_TYPES.includes(props.blockType)) {
             this.state = {
-                blockPosi: props.posi,
+                diffPosi: { x: 0, y: 0 },
                 blockSize: typeof Block.BLOCK_SIZES.get(props.blockType) !== 'undefined' ? Block.BLOCK_SIZES.get(props.blockType) : { w: 0, h: 0 },
                 blockType: props.blockType,
                 blockContent: '',
@@ -43,12 +46,16 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
         }
     }
 
-    // state = {
-    //     blockPosi: { x: 0, y: 0 },
-    //     blockSize: { w: 0, h: 0 },
-    //     blockType: ''
-    // }
-    handleMouseDown(e: any) {
+    componentDidMount() {
+        console.log('component mount');
+        // this.addEventListener('keydown', this.handleKeyDown.bind(this));
+        // document.addEventListener('keydown', this.handleKeyDown.bind(this));
+    }
+    componentDidUpdate() {
+        console.log('component update');
+    }
+
+    handleCoverMouseDown(e: any) {
         e.target.classList.add('grabbing');
         this.setState({
             mouseMoving: true,
@@ -56,16 +63,16 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
         })
     }
 
-    handleMouseMove(e: any) {
+    handleCoverMouseMove(e: any) {
         if (this.state.mouseMoving) {
             const tmpX: number = e.clientX;
             const tmpY: number = e.clientY;
             const diffX: number = tmpX - this.state.mouseMovingPosi.x;
             const diffY: number = tmpY - this.state.mouseMovingPosi.y;
             this.setState({
-                blockPosi: {
-                    x: this.state.blockPosi.x + diffX,
-                    y: this.state.blockPosi.y + diffY
+                diffPosi: {
+                    x: this.state.diffPosi.x + diffX,
+                    y: this.state.diffPosi.y + diffY
                 },
                 mouseMovingPosi: {
                     x: tmpX,
@@ -75,16 +82,19 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
         }
     }
 
-    handleMouseUp(e: any) {
+    handleCoverMouseUp(e: any) {
         e.target.classList.remove('grabbing');
         this.setState({
             mouseMoving: false
         })
     }
 
-    handleDblClick(e: any) {
+    handleCoverDblClick(e: any) {
         this.setState({
             covering: false
+        }, () => {
+            console.log('callback', this.monacoRef.current.editor);
+            this.monacoRef.current.editor.focus();
         })
     }
 
@@ -92,6 +102,17 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
         this.setState({
             covering: true
         })
+    }
+
+    handleKeyDown(e: any) {
+        console.log(e.key, this);
+        switch (e.key) {
+            case 'Delete':
+                this.props.deleteBlock(this.props.id);
+                break;
+            default:
+                break;
+        }
     }
 
     handleMonacoOnChange(newVal: string, e: any) {
@@ -123,7 +144,7 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
                         value={this.state.blockContent}
                         options={options}
                         onChange={this.handleMonacoOnChange.bind(this)}
-                        editorDidMount={this.handleMonacoDidMount}
+                        editorDidMount={this.handleMonacoDidMount.bind(this)}
                     />
                 </div>
                 break;
@@ -132,20 +153,24 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
                 <div className='block-inner-container'>{this.state.blockContent}</div>
                 break;
         }
-
+        console.log('rednering', this.props.id, this.state.diffPosi);
         return (
-            <div className='block-container' style={{
-                top: this.state.blockPosi.y,
-                left: this.state.blockPosi.x,
-                width: typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.w : 0,
-                height: typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.h : 0
-            }} onBlur={(e) => { this.handleBlur(e) }}>
-                {blockInnerContainer}
+            <div className='block-container'
+                tabIndex={this.props.id}
+                style={{
+                    top: this.state.diffPosi.y + this.props.posi.y,
+                    left: this.state.diffPosi.x + this.props.posi.x,
+                    width: typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.w : 0,
+                    height: typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.h : 0
+                }}
+                onBlur={(e) => { this.handleBlur(e) }}
+                onKeyDown={(e) => { this.handleKeyDown(e) }}>
+                { blockInnerContainer}
                 <div className='cover'
-                    onMouseDown={(e) => { this.handleMouseDown(e) }}
-                    onMouseMove={(e) => { this.handleMouseMove(e) }}
-                    onMouseUp={(e) => { this.handleMouseUp(e) }}
-                    onDoubleClick={(e) => { this.handleDblClick(e) }}
+                    onMouseDown={(e) => { this.handleCoverMouseDown(e) }}
+                    onMouseMove={(e) => { this.handleCoverMouseMove(e) }}
+                    onMouseUp={(e) => { this.handleCoverMouseUp(e) }}
+                    onDoubleClick={(e) => { this.handleCoverDblClick(e) }}
                     style={{ display: this.state.covering ? '' : 'none' }}></div>
             </div>
         )

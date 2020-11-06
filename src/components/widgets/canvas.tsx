@@ -8,6 +8,7 @@ interface ICanvasState {
     showBlockSelector: boolean
     blockSelectorPosi: ICoord
     blocks: IBlockProps[]
+    // focusedBlock: string
 }
 
 export default class Canvas extends React.Component<{}, ICanvasState> {
@@ -20,7 +21,8 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
     state = {
         showBlockSelector: false,
         blockSelectorPosi: { x: 0, y: 0 },
-        blocks: []
+        blocks: [],
+        focusedBlock: ''
     }
 
     showBSelector(show: boolean) {
@@ -30,13 +32,30 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
     }
 
     getSelectorRes(posi: ICoord, type: string) {
+        const len: number = this.state.blocks.length;
         this.setState({
             showBlockSelector: false,
             blocks: [...this.state.blocks, {
+                id: len,
                 posi: posi,
                 blockType: type,
-                blockContent: ''
+                blockContent: '',
+                deleteBlock: (str: number) => { }
             }]
+        })
+    }
+
+    delBlock(blockId: number) {
+        console.log('delete', blockId, this.state.blocks);
+        let tmpStateBlocks: IBlockProps[] = [];
+        this.state.blocks.forEach((bp: IBlockProps) => {
+            if (bp.id !== blockId) {
+                tmpStateBlocks.push(bp);
+            }
+        })
+        console.log('result blocks: ', tmpStateBlocks);
+        this.setState({
+            blocks: tmpStateBlocks
         })
     }
 
@@ -51,7 +70,6 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
                 const canvasBg: HTMLElement | null = document.getElementById(Canvas.CANVAS_BG_ID);
                 const offsetX: number = canvasBg ? canvasBg.offsetLeft : 0;
                 const offsetY: number = canvasBg ? canvasBg.offsetTop : 0;
-                console.log('test: ', offsetX, offsetY, canvasBg?.offsetTop);
                 this.setState({
                     showBlockSelector: true,
                     blockSelectorPosi: {
@@ -71,10 +89,16 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
             ></BlockSelector> : null
 
         const renderedBlocks: JSX.Element[] = this.state.blocks.map((bProps: IBlockProps, idx: number) => {
-            return <Block posi={bProps.posi} blockType={bProps.blockType} blockContent={bProps.blockContent}></Block>
+            return <Block
+                id={bProps.id}
+                posi={bProps.posi}
+                blockType={bProps.blockType}
+                blockContent={bProps.blockContent}
+                deleteBlock={this.delBlock.bind(this)}></Block>
         })
         return (
             <div id={Canvas.CANVAS_BG_ID} className='canvas-bg' onDoubleClick={(e) => { handleDblClick(e) }}>
+                <svg></svg>
                 {bSelector}
                 {renderedBlocks}
             </div>
