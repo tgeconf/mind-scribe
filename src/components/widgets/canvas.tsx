@@ -8,6 +8,7 @@ interface ICanvasState {
     showBlockSelector: boolean
     blockSelectorPosi: ICoord
     blocks: IBlockProps[]
+    deletedBlocks: number[]
     // focusedBlock: string
 }
 
@@ -22,7 +23,8 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
         showBlockSelector: false,
         blockSelectorPosi: { x: 0, y: 0 },
         blocks: [],
-        focusedBlock: ''
+        focusedBlock: '',
+        deletedBlocks: []
     }
 
     showBSelector(show: boolean) {
@@ -47,15 +49,8 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
 
     delBlock(blockId: number) {
         console.log('delete', blockId, this.state.blocks);
-        let tmpStateBlocks: IBlockProps[] = [];
-        this.state.blocks.forEach((bp: IBlockProps) => {
-            if (bp.id !== blockId) {
-                tmpStateBlocks.push(bp);
-            }
-        })
-        console.log('result blocks: ', tmpStateBlocks);
         this.setState({
-            blocks: tmpStateBlocks
+            deletedBlocks: [...this.state.deletedBlocks, blockId]
         })
     }
 
@@ -88,13 +83,16 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
                 addBlock={this.getSelectorRes.bind(this)}
             ></BlockSelector> : null
 
-        const renderedBlocks: JSX.Element[] = this.state.blocks.map((bProps: IBlockProps, idx: number) => {
-            return <Block
-                id={bProps.id}
-                posi={bProps.posi}
-                blockType={bProps.blockType}
-                blockContent={bProps.blockContent}
-                deleteBlock={this.delBlock.bind(this)}></Block>
+        const renderedBlocks: (JSX.Element | null)[] = this.state.blocks.map((bProps: IBlockProps, idx: number) => {
+            if (!this.state.deletedBlocks.includes(bProps.id as never)) {
+                return <Block
+                    id={bProps.id}
+                    posi={bProps.posi}
+                    blockType={bProps.blockType}
+                    blockContent={bProps.blockContent}
+                    deleteBlock={this.delBlock.bind(this)}></Block>
+            }
+            return null;
         })
         return (
             <div id={Canvas.CANVAS_BG_ID} className='canvas-bg' onDoubleClick={(e) => { handleDblClick(e) }}>

@@ -15,8 +15,7 @@ interface BlockState {
     diffPosi: ICoord
     blockSize: ISize | undefined
     blockType: string
-    blockContent: string
-    covering: boolean
+    blockContent: string | null
     mouseMoving: boolean
     mouseMovingPosi: ICoord
 }
@@ -38,29 +37,33 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
                 diffPosi: { x: 0, y: 0 },
                 blockSize: typeof Block.BLOCK_SIZES.get(props.blockType) !== 'undefined' ? Block.BLOCK_SIZES.get(props.blockType) : { w: 0, h: 0 },
                 blockType: props.blockType,
-                blockContent: '',
-                covering: true,
+                blockContent: null,
                 mouseMoving: false,
                 mouseMovingPosi: { x: 0, y: 0 }
             }
         }
     }
 
-    componentDidMount() {
-        console.log('component mount');
-        // this.addEventListener('keydown', this.handleKeyDown.bind(this));
-        // document.addEventListener('keydown', this.handleKeyDown.bind(this));
-    }
-    componentDidUpdate() {
-        console.log('component update');
-    }
+    // componentDidMount(){
+    //     document.onmousemove = (e:any)=>{
+    //         this.handleCoverMouseMove(e);
+    //     }
+    // }
 
     handleCoverMouseDown(e: any) {
         e.target.classList.add('grabbing');
         this.setState({
             mouseMoving: true,
             mouseMovingPosi: { x: e.clientX, y: e.clientY }
+        }, () => {
+            document.onmousemove = (e: any) => {
+                this.handleCoverMouseMove(e);
+            }
+            document.onmouseup = (e: any) => {
+                this.handleCoverMouseUp(e);
+            }
         })
+
     }
 
     handleCoverMouseMove(e: any) {
@@ -86,21 +89,9 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
         e.target.classList.remove('grabbing');
         this.setState({
             mouseMoving: false
-        })
-    }
-
-    handleCoverDblClick(e: any) {
-        this.setState({
-            covering: false
         }, () => {
-            console.log('callback', this.monacoRef.current.editor);
-            this.monacoRef.current.editor.focus();
-        })
-    }
-
-    handleBlur(e: any) {
-        this.setState({
-            covering: true
+            document.onmousemove = null;
+            document.onmouseup = null;
         })
     }
 
@@ -116,14 +107,18 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
     }
 
     handleMonacoOnChange(newVal: string, e: any) {
-        this.setState({
-            blockContent: this.monacoRef.current.editor.getValue()
-        })
+        const tmpValue: string = this.monacoRef.current.editor.getValue();
+        if (tmpValue.replaceAll(/\r\n/gi, '').length > 0) {
+            this.setState({
+                blockContent: tmpValue
+            })
+        }
     }
 
     handleMonacoDidMount(editor: any, monaco: any) {
         // console.log('editorDidMount', editor);
-        editor.focus();
+        // editor.setPosition({ lineNumber: 0, column: 0 });
+        // editor.focus();
     }
 
     render() {
@@ -140,7 +135,7 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
                         width={typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.w : 0}
                         height={typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.h : 0}
                         language="json"
-                        theme="vs-lightdsa"
+                        theme="vs-light"
                         value={this.state.blockContent}
                         options={options}
                         onChange={this.handleMonacoOnChange.bind(this)}
@@ -153,7 +148,6 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
                 <div className='block-inner-container'>{this.state.blockContent}</div>
                 break;
         }
-        console.log('rednering', this.props.id, this.state.diffPosi);
         return (
             <div className='block-container'
                 tabIndex={this.props.id}
@@ -163,15 +157,12 @@ export default class Block extends React.Component<IBlockProps, BlockState> {
                     width: typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.w : 0,
                     height: typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.h : 0
                 }}
-                onBlur={(e) => { this.handleBlur(e) }}
                 onKeyDown={(e) => { this.handleKeyDown(e) }}>
+                <div className='title-container' onMouseDown={(e) => { this.handleCoverMouseDown(e) }}>
+                    <p>{this.state.blockType}</p>
+                </div>
+                <div className='cover'></div>
                 { blockInnerContainer}
-                <div className='cover'
-                    onMouseDown={(e) => { this.handleCoverMouseDown(e) }}
-                    onMouseMove={(e) => { this.handleCoverMouseMove(e) }}
-                    onMouseUp={(e) => { this.handleCoverMouseUp(e) }}
-                    onDoubleClick={(e) => { this.handleCoverDblClick(e) }}
-                    style={{ display: this.state.covering ? '' : 'none' }}></div>
             </div>
         )
     }
