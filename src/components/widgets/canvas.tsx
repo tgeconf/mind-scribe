@@ -2,17 +2,20 @@ import '../../assets/style/canvas.scss';
 import React from 'react';
 import BlockSelector from './blockSelector';
 import { ICoord } from '../ds';
-import Block, { IBlockProps } from './block';
+import Block, { BlockProps } from './block';
+import Link, { LinkProps } from './link';
 
-interface ICanvasState {
+interface CanvasState {
     showBlockSelector: boolean
     blockSelectorPosi: ICoord
-    blocks: IBlockProps[]
+    blocks: BlockProps[]
+    links: LinkProps[]
     deletedBlocks: number[]
+    mousePressed: boolean
     // focusedBlock: string
 }
 
-export default class Canvas extends React.Component<{}, ICanvasState> {
+export default class Canvas extends React.Component<{}, CanvasState> {
     static CANVAS_BG_ID: string = 'canvasBg';
 
     constructor(props: any) {
@@ -23,8 +26,10 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
         showBlockSelector: false,
         blockSelectorPosi: { x: 0, y: 0 },
         blocks: [],
+        links: [],
         focusedBlock: '',
-        deletedBlocks: []
+        deletedBlocks: [],
+        mousePressed: false
     }
 
     showBSelector(show: boolean) {
@@ -83,7 +88,7 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
                 addBlock={this.getSelectorRes.bind(this)}
             ></BlockSelector> : null
 
-        const renderedBlocks: (JSX.Element | null)[] = this.state.blocks.map((bProps: IBlockProps, idx: number) => {
+        const renderedBlocks: (JSX.Element | null)[] = this.state.blocks.map((bProps: BlockProps, idx: number) => {
             if (!this.state.deletedBlocks.includes(bProps.id as never)) {
                 return <Block
                     id={bProps.id}
@@ -96,7 +101,9 @@ export default class Canvas extends React.Component<{}, ICanvasState> {
         })
         return (
             <div id={Canvas.CANVAS_BG_ID} className='canvas-bg' onDoubleClick={(e) => { handleDblClick(e) }}>
-                <svg></svg>
+                <svg>
+                    <Link startBlockId={0} endBlockId={1} startPnt={{ x: 0, y: 0 }} endPnt={{ x: 100, y: 200 }}></Link>
+                </svg>
                 {bSelector}
                 {renderedBlocks}
             </div>

@@ -9,12 +9,12 @@ interface BlockSelectorProps {
     addBlock: (posi: ICoord, type: string) => void
 }
 
-interface IBlockSelectorState {
+interface BlockSelectorState {
     val: string
     size: number
 }
 
-export default class BlockSelector extends React.Component<BlockSelectorProps, IBlockSelectorState> {
+export default class BlockSelector extends React.Component<BlockSelectorProps, BlockSelectorState> {
     static selectorH: number = 20;
     static selectorW: number = 2;
 
