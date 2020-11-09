@@ -12,7 +12,6 @@ interface CanvasState {
     links: LinkProps[]
     deletedBlocks: number[]
     mousePressed: boolean
-    // focusedBlock: string
 }
 
 export default class Canvas extends React.Component<{}, CanvasState> {
@@ -47,13 +46,34 @@ export default class Canvas extends React.Component<{}, CanvasState> {
                 posi: posi,
                 blockType: type,
                 blockContent: '',
-                deleteBlock: (str: number) => { }
+                deleteBlock: (str: number) => { },
+                addLink: this.addLink.bind(this),
+                updateLastLink: this.updateLastLink.bind(this)
             }]
         })
     }
 
+    addLink(startBId: number, endBId: number, startPnt: ICoord, endPnt: ICoord) {
+        this.setState({
+            links: [...this.state.links, {
+                startBlockId: startBId,
+                endBlockId: endBId,
+                startPnt: startPnt,
+                endPnt: endPnt
+            }]
+        })
+    }
+
+    updateLastLink(endPnt: ICoord) {
+        const tmpLinks: LinkProps[] = this.state.links;
+        tmpLinks[tmpLinks.length - 1].endPnt = endPnt;
+        console.log('updateing last link: ', endPnt, tmpLinks);
+        this.setState({
+            links: tmpLinks
+        })
+    }
+
     delBlock(blockId: number) {
-        console.log('delete', blockId, this.state.blocks);
         this.setState({
             deletedBlocks: [...this.state.deletedBlocks, blockId]
         })
@@ -85,8 +105,7 @@ export default class Canvas extends React.Component<{}, CanvasState> {
                 posi={this.state.blockSelectorPosi}
                 val={''}
                 showBSelector={this.showBSelector.bind(this)}
-                addBlock={this.getSelectorRes.bind(this)}
-            ></BlockSelector> : null
+                addBlock={this.getSelectorRes.bind(this)}></BlockSelector> : null
 
         const renderedBlocks: (JSX.Element | null)[] = this.state.blocks.map((bProps: BlockProps, idx: number) => {
             if (!this.state.deletedBlocks.includes(bProps.id as never)) {
@@ -95,14 +114,29 @@ export default class Canvas extends React.Component<{}, CanvasState> {
                     posi={bProps.posi}
                     blockType={bProps.blockType}
                     blockContent={bProps.blockContent}
-                    deleteBlock={this.delBlock.bind(this)}></Block>
+                    deleteBlock={this.delBlock.bind(this)}
+                    addLink={bProps.addLink}
+                    updateLastLink={bProps.updateLastLink}></Block>
+            }
+            return null;
+        })
+
+        const renderedLinks: (JSX.Element | null)[] = this.state.links.map((lProps: LinkProps, idx: number) => {
+            if (!this.state.deletedBlocks.includes(lProps.startBlockId as never) && !this.state.deletedBlocks.includes(lProps.endBlockId as never)) {
+                console.log('rendering: ', lProps.endPnt);
+                return <Link
+                    startBlockId={lProps.startBlockId}
+                    endBlockId={lProps.endBlockId}
+                    startPnt={lProps.startPnt}
+                    endPnt={lProps.endPnt}></Link>
             }
             return null;
         })
         return (
             <div id={Canvas.CANVAS_BG_ID} className='canvas-bg' onDoubleClick={(e) => { handleDblClick(e) }}>
-                <svg>
-                    <Link startBlockId={0} endBlockId={1} startPnt={{ x: 0, y: 0 }} endPnt={{ x: 100, y: 200 }}></Link>
+                <svg id='svgContainer'>
+                    <circle id='svgOri' cx='0' cy='0' r='0.1'></circle>
+                    {renderedLinks}
                 </svg>
                 {bSelector}
                 {renderedBlocks}

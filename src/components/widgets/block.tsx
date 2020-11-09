@@ -11,6 +11,8 @@ export interface BlockProps {
     blockType: string
     blockContent: string
     deleteBlock: (blockId: number) => void
+    addLink: (startBId: number, endBId: number, startPnt: ICoord, endPnt: ICoord) => void
+    updateLastLink: (endPnt: ICoord) => void
 }
 
 interface BlockState {
@@ -114,7 +116,7 @@ export default class Block extends React.Component<BlockProps, BlockState> {
         const offsetY: number = canvasBg ? canvasBg.offsetTop : 0;
         const mouseX: number = e.clientX - BlockSelector.selectorW / 2 - offsetX;
         const mouseY: number = e.clientY - BlockSelector.selectorH / 2 - offsetY;
-        console.log(mouseX, blockX1, blockX1 + respondW);
+        // console.log(mouseX, blockX1, blockX1 + respondW);
         const anchorSize: number = 10;
         if ((mouseX >= blockX1 - 2 && mouseX <= blockX1 + respondW && mouseY >= blockY1 && mouseY <= blockY2) ||
             (mouseX >= blockX1 - anchorSize && mouseX <= blockX1 && mouseY >= (blockY1 + blockSize.h / 2 - anchorSize) && mouseY <= (blockY1 + blockSize.h / 2 + anchorSize))) {
@@ -166,6 +168,25 @@ export default class Block extends React.Component<BlockProps, BlockState> {
         // editor.focus();
     }
 
+    handleMouseDownAnchor(type: number, e: any) {
+        this.props.addLink(0, 1, { x: e.clientX, y: e.clientY }, { x: e.clientX, y: e.clientY });
+        document.onmousemove = (e) => {
+            this.handleMouseMoveAnchor(e);
+        }
+        document.onmouseup = (e) => {
+            this.handleMouseUpAnchor(e);
+        }
+    }
+
+    handleMouseMoveAnchor(e: any) {
+        this.props.updateLastLink({ x: e.clientX, y: e.clientY });
+    }
+
+    handleMouseUpAnchor(e: any) {
+        document.onmousemove = null;
+        document.onmouseup = null;
+    }
+
     render() {
         //generate block content
         let blockInnerContainer: JSX.Element = <div className='block-inner-container'></div>;
@@ -208,13 +229,13 @@ export default class Block extends React.Component<BlockProps, BlockState> {
                 <div className='title-container' onMouseDown={(e) => { this.handleCoverMouseDown(e) }}>
                     <p>{this.state.blockType}</p>
                 </div>
-                <div className={'anchor-pnt a-top ' + (this.state.showAnchors[0] ? 'hover-a-top' : '')}></div>
-                <div className={'anchor-pnt a-right ' + (this.state.showAnchors[1] ? 'hover-a-right' : '')}></div>
-                <div className={'anchor-pnt a-bottom ' + (this.state.showAnchors[2] ? 'hover-a-bottom' : '')}></div>
-                <div className={'anchor-pnt a-left ' + (this.state.showAnchors[3] ? 'hover-a-left' : '')}></div>
+                <div className={'anchor-pnt a-top ' + (this.state.showAnchors[0] ? 'hover-a-top' : '')} onMouseDown={(e) => { this.handleMouseDownAnchor(0, e) }}></div>
+                <div className={'anchor-pnt a-right ' + (this.state.showAnchors[1] ? 'hover-a-right' : '')} onMouseDown={(e) => { this.handleMouseDownAnchor(1, e) }}></div>
+                <div className={'anchor-pnt a-bottom ' + (this.state.showAnchors[2] ? 'hover-a-bottom' : '')} onMouseDown={(e) => { this.handleMouseDownAnchor(2, e) }}></div>
+                <div className={'anchor-pnt a-left ' + (this.state.showAnchors[3] ? 'hover-a-left' : '')} onMouseDown={(e) => { this.handleMouseDownAnchor(3, e) }}></div>
                 <div className='cover'></div>
                 { blockInnerContainer}
-            </div>
+            </div >
         )
     }
 }

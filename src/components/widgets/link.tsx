@@ -22,9 +22,20 @@ export default class Link extends React.Component<LinkProps, LinkState> {
         startPnt: this.props.startPnt,
         endPnt: this.props.endPnt
     }
+
+    screenToSvg(screenCoord: ICoord) {
+        
+    }
+
     render() {
         return (
-            <line x1={this.state.startPnt.x} y1={this.state.startPnt.y} x2={this.state.endPnt.x} y2={this.state.endPnt.y} style={{ stroke: '#f3f3f3f2', strokeWidth: 3 }}></line>
+            <line
+                x1={this.props.startPnt.x}
+                y1={this.props.startPnt.y}
+                x2={this.props.endPnt.x}
+                y2={this.props.endPnt.y}
+                style={{ stroke: '#000', strokeWidth: 3 }}></line>
+            // style = {{ stroke: '#f3f3f3f2', strokeWidth: 3 }}></line>
         )
     }
 }
