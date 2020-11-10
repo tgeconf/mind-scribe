@@ -48,7 +48,8 @@ export default class Canvas extends React.Component<{}, CanvasState> {
                 blockContent: '',
                 deleteBlock: (str: number) => { },
                 addLink: this.addLink.bind(this),
-                updateLastLink: this.updateLastLink.bind(this)
+                updateLastLink: this.updateLastLink.bind(this),
+                removeLastLink: this.removeLastLink.bind(this)
             }]
         })
     }
@@ -67,9 +68,18 @@ export default class Canvas extends React.Component<{}, CanvasState> {
     updateLastLink(endPnt: ICoord) {
         const tmpLinks: LinkProps[] = this.state.links;
         tmpLinks[tmpLinks.length - 1].endPnt = endPnt;
-        console.log('updateing last link: ', endPnt, tmpLinks);
         this.setState({
             links: tmpLinks
+        })
+        //find the closest connection block
+        this.state.blocks.forEach((bProps: BlockProps) => {
+            
+        })
+    }
+
+    removeLastLink() {
+        this.setState({
+            links: this.state.links.slice(0, this.state.links.length - 1)
         })
     }
 
@@ -116,7 +126,8 @@ export default class Canvas extends React.Component<{}, CanvasState> {
                     blockContent={bProps.blockContent}
                     deleteBlock={this.delBlock.bind(this)}
                     addLink={bProps.addLink}
-                    updateLastLink={bProps.updateLastLink}></Block>
+                    updateLastLink={bProps.updateLastLink}
+                    removeLastLink={bProps.removeLastLink}></Block>
             }
             return null;
         })

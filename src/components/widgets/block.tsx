@@ -13,6 +13,7 @@ export interface BlockProps {
     deleteBlock: (blockId: number) => void
     addLink: (startBId: number, endBId: number, startPnt: ICoord, endPnt: ICoord) => void
     updateLastLink: (endPnt: ICoord) => void
+    removeLastLink: () => void
 }
 
 interface BlockState {
@@ -169,7 +170,35 @@ export default class Block extends React.Component<BlockProps, BlockState> {
     }
 
     handleMouseDownAnchor(type: number, e: any) {
-        this.props.addLink(0, 1, { x: e.clientX, y: e.clientY }, { x: e.clientX, y: e.clientY });
+        const anchorSize: number = 10;
+        let linkEnd: ICoord = { x: e.clientX, y: e.clientY };
+        const currentW: number = typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.w + Block.BLOCK_PADDING * 2 : 0;
+        const currentH: number = typeof this.state.blockSize !== 'undefined' ? this.state.blockSize.h + Block.BLOCK_PADDING * 2 : 0;
+        const halfW: number = currentW / 2;
+        const halfH: number = currentH / 2;
+        const currentX: number = this.state.diffPosi.x + this.props.posi.x;
+        const currentY: number = this.state.diffPosi.y + this.props.posi.y;
+        switch (type) {
+            case 0://top
+                linkEnd.x = currentX + halfW;
+                linkEnd.y = currentY + 2;
+                break;
+            case 1://right
+                linkEnd.x = currentX + currentW - 2;
+                linkEnd.y = currentY + halfH;
+                break;
+            case 2://bottom
+                linkEnd.x = currentX + halfW;
+                linkEnd.y = currentY + currentH - 2;
+                break;
+            case 3://left
+                linkEnd.x = currentX + 2;
+                linkEnd.y = currentY + halfH;
+                break;
+            default:
+                break;
+        }
+        this.props.addLink(0, 1, linkEnd, linkEnd);
         document.onmousemove = (e) => {
             this.handleMouseMoveAnchor(e);
         }
@@ -179,10 +208,11 @@ export default class Block extends React.Component<BlockProps, BlockState> {
     }
 
     handleMouseMoveAnchor(e: any) {
-        this.props.updateLastLink({ x: e.clientX, y: e.clientY });
+        this.props.updateLastLink({ x: e.clientX - 50, y: e.clientY - 40 });
     }
 
     handleMouseUpAnchor(e: any) {
+        this.props.removeLastLink();
         document.onmousemove = null;
         document.onmouseup = null;
     }
